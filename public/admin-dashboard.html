@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Japura Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-blue-600">Japura Events</h1>
+                    <span class="ml-4 px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">ADMIN</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="adminName" class="text-gray-700 font-medium hidden sm:inline"></span>
+                    <button onclick="logout()" 
+                            class="text-red-600 hover:text-red-700 font-medium transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h2>
+            <p class="text-gray-600">Review and manage event requests from organizers</p>
+        </div>
+
+        <!-- Alert Box -->
+        <div id="alertBox" class="mb-6"></div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Requests</p>
+                        <p id="statTotal" class="text-3xl font-bold text-gray-900">0</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-3">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Pending</p>
+                        <p id="statPending" class="text-3xl font-bold text-yellow-600">0</p>
+                    </div>
+                    <div class="bg-yellow-100 rounded-full p-3">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Approved</p>
+                        <p id="statApproved" class="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-green-100 rounded-full p-3">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Rejected</p>
+                        <p id="statRejected" class="text-3xl font-bold text-red-600">0</p>
+                    </div>
+                    <div class="bg-red-100 rounded-full p-3">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="mb-6">
+            <div class="flex flex-wrap gap-2">
+                <button onclick="filterRequests('all')" id="filterAll"
+                        class="px-5 py-2.5 rounded-lg font-medium bg-blue-600 text-white transition hover:bg-blue-700">
+                    All Requests
+                </button>
+                <button onclick="filterRequests('pending')" id="filterPending"
+                        class="px-5 py-2.5 rounded-lg font-medium bg-gray-200 text-gray-700 transition hover:bg-gray-300">
+                    Pending
+                </button>
+                <button onclick="filterRequests('approved')" id="filterApproved"
+                        class="px-5 py-2.5 rounded-lg font-medium bg-gray-200 text-gray-700 transition hover:bg-gray-300">
+                    Approved
+                </button>
+                <button onclick="filterRequests('rejected')" id="filterRejected"
+                        class="px-5 py-2.5 rounded-lg font-medium bg-gray-200 text-gray-700 transition hover:bg-gray-300">
+                    Rejected
+                </button>
+            </div>
+        </div>
+
+        <!-- Requests List -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-900">Event Requests</h3>
+            </div>
+            <div id="requestsList" class="p-6">
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 bg-white border-t">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-600">
+            <p>&copy; 2025 Japura Events - Admin Panel</p>
+        </div>
+    </footer>
+
+    <script>
+        let currentFilter = 'all';
+        let allRequests = [];
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('api/auth.php?action=check-session');
+                const result = await response.json();
+                
+                if (!result.logged_in || result.user_type !== 'admin') {
+                    window.location.href = 'index.html';
+                    return false;
+                }
+                
+                document.getElementById('adminName').textContent = result.user_name;
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = 'index.html';
+                return false;
+            }
+        }
+
+        // Logout function
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    await fetch('api/auth.php?action=logout', { method: 'POST' });
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    window.location.href = 'index.html';
+                }
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'error') {
+            const alertBox = document.getElementById('alertBox');
+            const colors = {
+                success: 'bg-green-50 border-green-500 text-green-800',
+                error: 'bg-red-50 border-red-500 text-red-800',
+                info: 'bg-blue-50 border-blue-500 text-blue-800'
+            };
+            
+            const bgColor = colors[type] || colors.error;
+            
+            alertBox.innerHTML = `
+                <div class="${bgColor} border-l-4 p-4 rounded-lg flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.remove()" class="text-current hover:opacity-75">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                const alert = alertBox.querySelector('div');
+                if (alert) alert.remove();
+            }, 5000);
+        }
+
+        // Filter requests
+        function filterRequests(filter) {
+            currentFilter = filter;
+            
+            // Update button styles
+            const buttons = {
+                'all': 'filterAll',
+                'pending': 'filterPending',
+                'approved': 'filterApproved',
+                'rejected': 'filterRejected'
+            };
+            
+            Object.keys(buttons).forEach(key => {
+                const btn = document.getElementById(buttons[key]);
+                if (key === filter) {
+                    btn.className = 'px-5 py-2.5 rounded-lg font-medium bg-blue-600 text-white transition hover:bg-blue-700';
+                } else {
+                    btn.className = 'px-5 py-2.5 rounded-lg font-medium bg-gray-200 text-gray-700 transition hover:bg-gray-300';
+                }
+            });
+            
+            loadRequests();
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const stats = {
+                total: allRequests.length,
+                pending: allRequests.filter(r => r.status === 'pending').length,
+                approved: allRequests.filter(r => r.status === 'approved').length,
+                rejected: allRequests.filter(r => r.status === 'rejected').length
+            };
+            
+            document.getElementById('statTotal').textContent = stats.total;
+            document.getElementById('statPending').textContent = stats.pending;
+            document.getElementById('statApproved').textContent = stats.approved;
+            document.getElementById('statRejected').textContent = stats.rejected;
+        }
+
+        // Load requests
+        async function loadRequests() {
+            try {
+                const url = currentFilter === 'all' 
+                    ? 'api/event_requests.php' 
+                    : `api/event_requests.php?status=${currentFilter}`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                const requestsList = document.getElementById('requestsList');
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    // Store all requests for statistics
+                    if (currentFilter === 'all') {
+                        allRequests = result.data;
+                        updateStatistics();
+                    }
+                    
+                    requestsList.innerHTML = `
+                        <div class="space-y-6">
+                            ${result.data.map(req => createRequestCard(req)).join('')}
+                        </div>
+                    `;
+                } else {
+                    requestsList.innerHTML = `
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700 mb-2">No requests found</h3>
+                            <p class="text-gray-500">There are no ${currentFilter === 'all' ? '' : currentFilter} event requests at this time.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                document.getElementById('requestsList').innerHTML = `
+                    <div class="text-center py-12 text-red-500">
+                        <p>Error loading requests. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Create request card HTML
+        function createRequestCard(req) {
+            const statusColors = {
+                pending: 'bg-yellow-100 text-yellow-800',
+                approved: 'bg-green-100 text-green-800',
+                rejected: 'bg-red-100 text-red-800',
+                deleted: 'bg-gray-100 text-gray-800'
+            };
+            
+            const statusColor = statusColors[req.status] || 'bg-gray-100 text-gray-800';
+            
+            const startDate = new Date(req.starts_at);
+            const endDate = new Date(req.ends_at);
+            const createdDate = new Date(req.created_at);
+            
+            return `
+                <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
+                    <!-- Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                        <div class="mb-3 sm:mb-0">
+                            <h4 class="text-xl font-bold text-gray-900 mb-2">${escapeHtml(req.title)}</h4>
+                            <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    ${escapeHtml(req.organizer_name)}
+                                </span>
+                                <span class="text-gray-400">•</span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                    ${escapeHtml(req.organizer_email)}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="px-4 py-2 rounded-full text-sm font-semibold ${statusColor} whitespace-nowrap">
+                            ${req.status.toUpperCase()}
+                        </span>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <p class="text-gray-700 leading-relaxed">${escapeHtml(req.description)}</p>
+                    </div>
+                    
+                    <!-- Event Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Venue</p>
+                            <p class="text-gray-900 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                ${escapeHtml(req.venue)}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Event Date</p>
+                            <p class="text-gray-900">${formatDate(startDate)}</p>
+                            <p class="text-sm text-gray-600">${formatTime(startDate)} - ${formatTime(endDate)}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Requested On</p>
+                            <p class="text-gray-900">${formatDate(createdDate)}</p>
+                            <p class="text-sm text-gray-600">${formatTime(createdDate)}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons (only for pending requests) -->
+                    ${req.status === 'pending' ? `
+                        <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                            <button onclick="approveRequest(${req.request_id})" 
+                                    class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Approve Request
+                            </button>
+                            <button onclick="rejectRequest(${req.request_id})" 
+                                    class="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Reject Request
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Approve request
+        async function approveRequest(requestId) {
+            if (!confirm('Are you sure you want to approve this event request?\n\nThis will create a published event visible to all users.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('api/admin_actions.php?action=approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ request_id: requestId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('✓ Event request approved successfully! Event is now published.', 'success');
+                    // Reload after a short delay to show the message
+                    setTimeout(() => {
+                        loadRequests();
+                        // Reload all requests to update statistics
+                        if (currentFilter !== 'all') {
+                            fetch('api/event_requests.php')
+                                .then(r => r.json())
+                                .then(data => {
+                                    if (data.success && data.data) {
+                                        allRequests = data.data;
+                                        updateStatistics();
+                                    }
+                                });
+                        }
+                    }, 1000);
+                } else {
+                    showAlert('✗ Failed to approve request: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error approving request:', error);
+                showAlert('✗ Network error. Please try again.', 'error');
+            }
+        }
+
+        // Reject request
+        async function rejectRequest(requestId) {
+            if (!confirm('Are you sure you want to reject this event request?\n\nThis action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('api/admin_actions.php?action=reject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ request_id: requestId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Event request has been rejected.', 'info');
+                    setTimeout(() => {
+                        loadRequests();
+                        // Reload all requests to update statistics
+                        if (currentFilter !== 'all') {
+                            fetch('api/event_requests.php')
+                                .then(r => r.json())
+                                .then(data => {
+                                    if (data.success && data.data) {
+                                        allRequests = data.data;
+                                        updateStatistics();
+                                    }
+                                });
+                        }
+                    }, 1000);
+                } else {
+                    showAlert('✗ Failed to reject request: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error rejecting request:', error);
+                showAlert('✗ Network error. Please try again.', 'error');
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(date) {
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Initialize page
+        checkAuth().then(isAuthenticated => {
+            if (isAuthenticated) {
+                loadRequests();
+            }
+        });
+    </script>
+</body>
+</html>

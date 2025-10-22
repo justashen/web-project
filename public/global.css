@@ -1,0 +1,73 @@
+@layer base {
+  :root {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 220 40% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 357 92% 52%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 357 92% 52%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 357 92% 52%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  p,
+  span,
+  a {
+    font-family: "Roboto Flex", sans-serif;
+    color: hsl(var(--muted-foreground));
+  }
+}
+
+body {
+  background-color: hsl(var(--background));
+  min-height: 100vh;
+}
+* {
+  border-color: hsl(var(--border));
+}
+
+/* Nav Bar */
+/* Custom deep dark background color for the navbar (based on the image) */
+/* --- Custom CSS for Mobile Menu Animation --- */
+#mobile-menu {
+  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+#mobile-menu.menu-open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* Ensure the dropdown menu is visible above other content */
+#search-results {
+  max-height: 60vh; /* Responsive height limit */
+}
+
+/* Typography for headings and text */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Bebas Neue", "Bebas Neue Fallback";
+}

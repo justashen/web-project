@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - Japura Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-blue-600">Japura Events</h1>
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="text-blue-600 hover:text-blue-700 font-medium">
+                        Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">Upcoming Events</h2>
+            <p class="text-xl text-blue-100">Discover and join exciting events at University of Sri Jayewardenepura</p>
+        </div>
+    </div>
+
+    <!-- Events Section -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Filter/Search Bar -->
+        <div class="mb-8 flex flex-col md:flex-row gap-4">
+            <input type="text" id="searchInput" placeholder="Search events..." 
+                   class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <button onclick="searchEvents()" 
+                    class="md:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+                Search
+            </button>
+        </div>
+
+        <!-- Events Grid -->
+        <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <p class="col-span-full text-center text-gray-500">Loading events...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No Events Found</h3>
+            <p class="text-gray-500">Check back later for upcoming events</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-600">
+            <p>&copy; 2025 Japura Events. University of Sri Jayewardenepura</p>
+        </div>
+    </footer>
+
+    <script>
+        let allEvents = [];
+
+        async function loadEvents() {
+            try {
+                const response = await fetch('api/events.php?action=list');
+                const result = await response.json();
+                
+                if (result.success && result.events) {
+                    allEvents = result.events;
+                    displayEvents(allEvents);
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading events:', error);
+                showEmptyState();
+            }
+        }
+
+        function displayEvents(events) {
+            const eventsList = document.getElementById('eventsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (events.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            eventsList.innerHTML = events.map(event => createEventCard(event)).join('');
+        }
+
+        function createEventCard(event) {
+            const startDate = new Date(event.starts_at);
+            const endDate = new Date(event.ends_at);
+            const now = new Date();
+            const isUpcoming = startDate > now;
+            const isOngoing = startDate <= now && endDate >= now;
+            
+            return `
+                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition overflow-hidden">
+                    <!-- Event Status Badge -->
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3 text-white">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium">
+                                ${isOngoing ? '🔴 LIVE NOW' : isUpcoming ? '📅 UPCOMING' : '✓ COMPLETED'}
+                            </span>
+                            <button onclick="toggleLike(${event.event_id}, this)" 
+                                    class="text-white hover:scale-110 transition">
+                                <span class="text-2xl">♡</span>
+                                <span class="text-sm ml-1">${event.like_count || 0}</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Event Content -->
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">${event.title}</h3>
+                        
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">${event.description}</p>
+                        
+                        <div class="space-y-2 text-sm text-gray-700 mb-4">
+                            <div class="flex items-start">
+                                <span class="mr-2">📍</span>
+                                <span class="font-medium">${event.venue}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="mr-2">📅</span>
+                                <div>
+                                    <p class="font-medium">${formatDate(startDate)}</p>
+                                    <p class="text-gray-500">${formatTime(startDate)} - ${formatTime(endDate)}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="mr-2">👤</span>
+                                <span>${event.organizer_name || 'Event Organizer'}</span>
+                            </div>
+                        </div>
+                        
+                        <button onclick="viewDetails(${event.event_id})" 
+                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatDate(date) {
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function toggleLike(eventId, button) {
+            try {
+                const heartIcon = button.querySelector('span:first-child');
+                const isLiked = heartIcon.textContent === '♥';
+                
+                const action = isLiked ? 'unlike' : 'like';
+                const response = await fetch(`api/events.php?action=${action}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event_id: eventId })
+                });
+                
+                if (response.ok) {
+                    heartIcon.textContent = isLiked ? '♡' : '♥';
+                    const countSpan = button.querySelector('span:last-child');
+                    let count = parseInt(countSpan.textContent);
+                    countSpan.textContent = isLiked ? count - 1 : count + 1;
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+
+        function viewDetails(eventId) {
+            const event = allEvents.find(e => e.event_id === eventId);
+            if (!event) return;
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-start mb-6">
+                        <h2 class="text-3xl font-bold text-gray-900">${event.title}</h2>
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-2">Description</h3>
+                            <p class="text-gray-600">${event.description}</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-2">Event Details</h3>
+                            <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                                <p><span class="font-medium">📍 Venue:</span> ${event.venue}</p>
+                                <p><span class="font-medium">📅 Date:</span> ${formatDate(new Date(event.starts_at))}</p>
+                                <p><span class="font-medium">🕐 Time:</span> ${formatTime(new Date(event.starts_at))} - ${formatTime(new Date(event.ends_at))}</p>
+                                <p><span class="font-medium">👤 Organizer:</span> ${event.organizer_name || 'Event Organizer'}</p>
+                                <p><span class="font-medium">❤️ Likes:</span> ${event.like_count || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex gap-3">
+                        <button onclick="toggleLike(${event.event_id}, this); loadEvents();" 
+                                class="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition">
+                            ♥ Like Event
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-medium hover:bg-gray-300 transition">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function searchEvents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                displayEvents(allEvents);
+                return;
+            }
+            
+            const filtered = allEvents.filter(event => 
+                event.title.toLowerCase().includes(searchTerm) ||
+                event.description.toLowerCase().includes(searchTerm) ||
+                event.venue.toLowerCase().includes(searchTerm) ||
+                (event.organizer_name && event.organizer_name.toLowerCase().includes(searchTerm))
+            );
+            
+            displayEvents(filtered);
+        }
+
+        function showEmptyState() {
+            document.getElementById('eventsList').innerHTML = '';
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchEvents();
+            }
+        });
+
+        // Load events on page load
+        loadEvents();
+    </script>
+</body>
+</html>

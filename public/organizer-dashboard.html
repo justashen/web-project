@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizer Dashboard - Japura Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-blue-600">Japura Events</h1>
+                    <span class="ml-4 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">ORGANIZER</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="userName" class="text-gray-700 font-medium hidden sm:inline"></span>
+                    <button onclick="logout()" 
+                            class="text-red-600 hover:text-red-700 font-medium transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Organizer Dashboard</h2>
+            <p class="text-gray-600">Create and manage your event requests</p>
+        </div>
+
+        <!-- Alert Box -->
+        <div id="alertBox" class="mb-6"></div>
+
+        <!-- Quick Actions -->
+        <div class="mb-8">
+            <button onclick="showCreateForm()" 
+                    class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition shadow-md flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create New Event Request
+            </button>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Requests</p>
+                        <p id="statTotal" class="text-3xl font-bold text-gray-900">0</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-3">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Pending</p>
+                        <p id="statPending" class="text-3xl font-bold text-yellow-600">0</p>
+                    </div>
+                    <div class="bg-yellow-100 rounded-full p-3">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Approved</p>
+                        <p id="statApproved" class="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-green-100 rounded-full p-3">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Rejected</p>
+                        <p id="statRejected" class="text-3xl font-bold text-red-600">0</p>
+                    </div>
+                    <div class="bg-red-100 rounded-full p-3">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Requests Section -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-900">My Event Requests</h3>
+            </div>
+            <div id="requestsList" class="p-6">
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Event Request Modal -->
+    <div id="createFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">Create Event Request</h3>
+                <button onclick="hideCreateForm()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="createForm" class="space-y-6">
+                <!-- Event Title -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Event Title <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="title" required maxlength="255"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Enter event title">
+                </div>
+
+                <!-- Venue -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Venue <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="venue" required maxlength="255"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Enter event venue">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Description <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="description" id="description" required maxlength="1000" rows="5"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                              placeholder="Describe your event in detail"></textarea>
+                    <p class="mt-1 text-sm text-gray-500">
+                        <span id="charCount">0</span>/1000 characters
+                    </p>
+                </div>
+
+                <!-- Date and Time -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Start Date & Time <span class="text-red-500">*</span>
+                        </label>
+                        <input type="datetime-local" name="starts_at" id="starts_at" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            End Date & Time <span class="text-red-500">*</span>
+                        </label>
+                        <input type="datetime-local" name="ends_at" id="ends_at" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                    <button type="submit" id="submitBtn"
+                            class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Submit Request
+                    </button>
+                    <button type="button" onclick="hideCreateForm()" 
+                            class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 bg-white border-t">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-600">
+            <p>&copy; 2025 Japura Events - Organizer Panel</p>
+        </div>
+    </footer>
+
+    <script>
+        let userId = null;
+        let allRequests = [];
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('api/auth.php?action=check-session');
+                const result = await response.json();
+                
+                if (!result.logged_in || result.user_type !== 'organizer') {
+                    window.location.href = 'index.html';
+                    return false;
+                }
+                
+                userId = result.user_id;
+                document.getElementById('userName').textContent = result.user_name;
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = 'index.html';
+                return false;
+            }
+        }
+
+        // Logout function
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    await fetch('api/auth.php?action=logout', { method: 'POST' });
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    window.location.href = 'index.html';
+                }
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'error') {
+            const alertBox = document.getElementById('alertBox');
+            const colors = {
+                success: 'bg-green-50 border-green-500 text-green-800',
+                error: 'bg-red-50 border-red-500 text-red-800',
+                info: 'bg-blue-50 border-blue-500 text-blue-800'
+            };
+            
+            const bgColor = colors[type] || colors.error;
+            
+            alertBox.innerHTML = `
+                <div class="${bgColor} border-l-4 p-4 rounded-lg flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.remove()" class="text-current hover:opacity-75">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                const alert = alertBox.querySelector('div');
+                if (alert) alert.remove();
+            }, 5000);
+        }
+
+        // Show create form modal
+        function showCreateForm() {
+            document.getElementById('createFormModal').classList.remove('hidden');
+            
+            // Set minimum datetime to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            const dateTimeString = now.toISOString().slice(0, 16);
+            document.getElementById('starts_at').min = dateTimeString;
+            document.getElementById('ends_at').min = dateTimeString;
+        }
+
+        // Hide create form modal
+        function hideCreateForm() {
+            document.getElementById('createFormModal').classList.add('hidden');
+            document.getElementById('createForm').reset();
+            updateCharCount();
+        }
+
+        // Update character count
+        function updateCharCount() {
+            const description = document.getElementById('description');
+            const charCount = document.getElementById('charCount');
+            charCount.textContent = description.value.length;
+        }
+
+        // Character counter
+        document.addEventListener('DOMContentLoaded', () => {
+            const description = document.getElementById('description');
+            if (description) {
+                description.addEventListener('input', updateCharCount);
+            }
+        });
+
+        // Update statistics
+        function updateStatistics() {
+            const stats = {
+                total: allRequests.length,
+                pending: allRequests.filter(r => r.status === 'pending').length,
+                approved: allRequests.filter(r => r.status === 'approved').length,
+                rejected: allRequests.filter(r => r.status === 'rejected').length
+            };
+            
+            document.getElementById('statTotal').textContent = stats.total;
+            document.getElementById('statPending').textContent = stats.pending;
+            document.getElementById('statApproved').textContent = stats.approved;
+            document.getElementById('statRejected').textContent = stats.rejected;
+        }
+
+        // Handle form submission
+        document.getElementById('createForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            data.organizer_id = userId;
+
+            // Validate dates
+            const startsAt = new Date(data.starts_at);
+            const endsAt = new Date(data.ends_at);
+            const now = new Date();
+
+            if (startsAt < now) {
+                showAlert('Start date must be in the future', 'error');
+                return;
+            }
+
+            if (endsAt <= startsAt) {
+                showAlert('End date must be after start date', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const response = await fetch('api/event_requests.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('✓ Event request submitted successfully! Awaiting admin approval.', 'success');
+                    hideCreateForm();
+                    loadRequests();
+                } else {
+                    showAlert('✗ Failed to submit request: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting request:', error);
+                showAlert('✗ Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Request';
+            }
+        });
+
+        // Load requests
+        async function loadRequests() {
+            try {
+                const response = await fetch(`api/event_requests.php?organizer_id=${userId}`);
+                const result = await response.json();
+                
+                const requestsList = document.getElementById('requestsList');
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    allRequests = result.data;
+                    updateStatistics();
+                    
+                    requestsList.innerHTML = `
+                        <div class="space-y-4">
+                            ${result.data.map(req => createRequestCard(req)).join('')}
+                        </div>
+                    `;
+                } else {
+                    allRequests = [];
+                    updateStatistics();
+                    
+                    requestsList.innerHTML = `
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700 mb-2">No event requests yet</h3>
+                            <p class="text-gray-500 mb-4">Create your first event request to get started</p>
+                            <button onclick="showCreateForm()" 
+                                    class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                                Create Event Request
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                document.getElementById('requestsList').innerHTML = `
+                    <div class="text-center py-12 text-red-500">
+                        <p>Error loading requests. Please refresh the page.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Create request card HTML
+        function createRequestCard(req) {
+            const statusColors = {
+                pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                approved: 'bg-green-100 text-green-800 border-green-200',
+                rejected: 'bg-red-100 text-red-800 border-red-200',
+                deleted: 'bg-gray-100 text-gray-800 border-gray-200'
+            };
+            
+            const statusIcons = {
+                pending: '⏳',
+                approved: '✓',
+                rejected: '✗',
+                deleted: '🗑️'
+            };
+            
+            const statusColor = statusColors[req.status] || 'bg-gray-100 text-gray-800';
+            const statusIcon = statusIcons[req.status] || '•';
+            
+            const startDate = new Date(req.starts_at);
+            const endDate = new Date(req.ends_at);
+            const createdDate = new Date(req.created_at);
+            
+            return `
+                <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition bg-white">
+                    <!-- Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                        <div class="mb-3 sm:mb-0">
+                            <h4 class="text-xl font-bold text-gray-900 mb-1">${escapeHtml(req.title)}</h4>
+                            <p class="text-sm text-gray-500">
+                                Submitted on ${formatDate(createdDate)} at ${formatTime(createdDate)}
+                            </p>
+                        </div>
+                        <span class="px-4 py-2 rounded-lg text-sm font-semibold ${statusColor} border whitespace-nowrap">
+                            ${statusIcon} ${req.status.toUpperCase()}
+                        </span>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <p class="text-gray-700 leading-relaxed">${escapeHtml(req.description)}</p>
+                    </div>
+                    
+                    <!-- Event Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Venue</p>
+                            <p class="text-gray-900 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                ${escapeHtml(req.venue)}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Event Schedule</p>
+                            <p class="text-gray-900 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                ${formatDate(startDate)}
+                            </p>
+                            <p class="text-sm text-gray-600 ml-6">
+                                ${formatTime(startDate)} - ${formatTime(endDate)}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Status Message -->
+                    ${req.status === 'pending' ? `
+                        <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                            <p class="text-sm text-yellow-800">
+                                <strong>⏳ Awaiting Admin Approval</strong><br>
+                                Your event request is being reviewed by the administration.
+                            </p>
+                        </div>
+                    ` : req.status === 'approved' ? `
+                        <div class="mt-4 p-3 bg-green-50 border-l-4 border-green-400 rounded">
+                            <p class="text-sm text-green-800">
+                                <strong>✓ Approved</strong><br>
+                                Your event has been approved and is now published!
+                            </p>
+                        </div>
+                    ` : req.status === 'rejected' ? `
+                        <div class="mt-4 p-3 bg-red-50 border-l-4 border-red-400 rounded">
+                            <p class="text-sm text-red-800">
+                                <strong>✗ Rejected</strong><br>
+                                This event request was not approved. Please contact admin for more information.
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(date) {
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Initialize page
+        checkAuth().then(isAuthenticated => {
+            if (isAuthenticated) {
+                loadRequests();
+            }
+        });
+    </script>
+</body>
+</html>
