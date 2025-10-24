@@ -120,25 +120,52 @@
         </div>
     </main>
 
-    <!-- Create Event Request Modal -->
-    <div id="createFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <!-- Create/Edit Event Request Modal -->
+    <div id="eventFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full my-8">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">Create Event Request</h3>
-                <button onclick="hideCreateForm()" class="text-gray-400 hover:text-gray-600">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-900">Create Event Request</h3>
+                <button onclick="hideEventForm()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
-            <form id="createForm" class="space-y-6">
+            <form id="eventForm" class="space-y-6">
+                <input type="hidden" id="editRequestId" name="request_id">
+                
+                <!-- Thumbnail Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Event Thumbnail (Optional)
+                    </label>
+                    <div class="flex items-center gap-4">
+                        <div id="thumbnailPreview" class="w-48 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden">
+                            <span class="text-gray-400 text-sm">No thumbnail</span>
+                        </div>
+                        <div class="flex-1">
+                            <input type="file" id="thumbnailInput" accept="image/*" class="hidden" onchange="handleThumbnailSelect(event)">
+                            <input type="hidden" id="thumbnailUrl" name="thumbnail">
+                            <button type="button" onclick="document.getElementById('thumbnailInput').click()" 
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition mb-2 block">
+                                Choose Image
+                            </button>
+                            <button type="button" onclick="removeThumbnail()" 
+                                    class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition block">
+                                Remove
+                            </button>
+                            <p class="text-xs text-gray-500 mt-2">Recommended: 16:9 ratio, max 5MB</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Event Title -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Event Title <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="title" required maxlength="255"
+                    <input type="text" name="title" id="eventTitle" required maxlength="255"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                            placeholder="Enter event title">
                 </div>
@@ -148,7 +175,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Venue <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="venue" required maxlength="255"
+                    <input type="text" name="venue" id="eventVenue" required maxlength="255"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                            placeholder="Enter event venue">
                 </div>
@@ -158,7 +185,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Description <span class="text-red-500">*</span>
                     </label>
-                    <textarea name="description" id="description" required maxlength="1000" rows="5"
+                    <textarea name="description" id="eventDescription" required maxlength="1000" rows="5"
                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                               placeholder="Describe your event in detail"></textarea>
                     <p class="mt-1 text-sm text-gray-500">
@@ -172,14 +199,14 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Start Date & Time <span class="text-red-500">*</span>
                         </label>
-                        <input type="datetime-local" name="starts_at" id="starts_at" required
+                        <input type="datetime-local" name="starts_at" id="eventStartsAt" required
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             End Date & Time <span class="text-red-500">*</span>
                         </label>
-                        <input type="datetime-local" name="ends_at" id="ends_at" required
+                        <input type="datetime-local" name="ends_at" id="eventEndsAt" required
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                 </div>
@@ -188,9 +215,9 @@
                 <div class="flex flex-col sm:flex-row gap-4 pt-4">
                     <button type="submit" id="submitBtn"
                             class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                        Submit Request
+                        <span id="submitBtnText">Submit Request</span>
                     </button>
-                    <button type="button" onclick="hideCreateForm()" 
+                    <button type="button" onclick="hideEventForm()" 
                             class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition">
                         Cancel
                     </button>
@@ -209,6 +236,8 @@
     <script>
         let userId = null;
         let allRequests = [];
+        let isEditMode = false;
+        let currentThumbnailUrl = null;
 
         // Check authentication
         async function checkAuth() {
@@ -266,7 +295,6 @@
                 </div>
             `;
             
-            // Auto-hide after 5 seconds
             setTimeout(() => {
                 const alert = alertBox.querySelector('div');
                 if (alert) alert.remove();
@@ -275,33 +303,140 @@
 
         // Show create form modal
         function showCreateForm() {
-            document.getElementById('createFormModal').classList.remove('hidden');
+            isEditMode = false;
+            document.getElementById('modalTitle').textContent = 'Create Event Request';
+            document.getElementById('submitBtnText').textContent = 'Submit Request';
+            document.getElementById('eventFormModal').classList.remove('hidden');
+            document.getElementById('eventForm').reset();
+            document.getElementById('editRequestId').value = '';
+            currentThumbnailUrl = null;
+            updateThumbnailPreview(null);
+            updateCharCount();
             
-            // Set minimum datetime to now
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             const dateTimeString = now.toISOString().slice(0, 16);
-            document.getElementById('starts_at').min = dateTimeString;
-            document.getElementById('ends_at').min = dateTimeString;
+            document.getElementById('eventStartsAt').min = dateTimeString;
+            document.getElementById('eventEndsAt').min = dateTimeString;
         }
 
-        // Hide create form modal
-        function hideCreateForm() {
-            document.getElementById('createFormModal').classList.add('hidden');
-            document.getElementById('createForm').reset();
+        // Show edit form for pending requests
+        function showEditForm(request) {
+            if (request.status !== 'pending') {
+                showAlert('You can only edit pending requests', 'error');
+                return;
+            }
+            
+            isEditMode = true;
+            document.getElementById('modalTitle').textContent = 'Edit Event Request';
+            document.getElementById('submitBtnText').textContent = 'Update Request';
+            document.getElementById('eventFormModal').classList.remove('hidden');
+            
+            // Populate form
+            document.getElementById('editRequestId').value = request.request_id;
+            document.getElementById('eventTitle').value = request.title;
+            document.getElementById('eventVenue').value = request.venue;
+            document.getElementById('eventDescription').value = request.description;
+            
+            // Format datetime for input
+            const formatDateTime = (dateStr) => {
+                const date = new Date(dateStr);
+                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                return date.toISOString().slice(0, 16);
+            };
+            
+            document.getElementById('eventStartsAt').value = formatDateTime(request.starts_at);
+            document.getElementById('eventEndsAt').value = formatDateTime(request.ends_at);
+            
+            currentThumbnailUrl = request.thumbnail;
+            document.getElementById('thumbnailUrl').value = request.thumbnail || '';
+            updateThumbnailPreview(request.thumbnail);
             updateCharCount();
+        }
+
+        // Hide event form modal
+        function hideEventForm() {
+            document.getElementById('eventFormModal').classList.add('hidden');
+            document.getElementById('eventForm').reset();
+            updateCharCount();
+        }
+
+        // Handle thumbnail selection
+        async function handleThumbnailSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                showAlert('Please select an image file', 'error');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('Image size must be less than 5MB', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const preview = document.getElementById('thumbnailPreview');
+            preview.innerHTML = '<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>';
+            
+            // Upload thumbnail
+            const formData = new FormData();
+            formData.append('thumbnail', file);
+            
+            try {
+                const response = await fetch('api/upload_thumbnail.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentThumbnailUrl = result.thumbnail_url;
+                    document.getElementById('thumbnailUrl').value = result.thumbnail_url;
+                    updateThumbnailPreview(result.thumbnail_url);
+                    showAlert('Thumbnail uploaded successfully!', 'success');
+                } else {
+                    showAlert(result.message || 'Failed to upload thumbnail', 'error');
+                    updateThumbnailPreview(null);
+                }
+            } catch (error) {
+                console.error('Error uploading thumbnail:', error);
+                showAlert('Error uploading thumbnail', 'error');
+                updateThumbnailPreview(null);
+            }
+        }
+
+        // Update thumbnail preview
+        function updateThumbnailPreview(url) {
+            const preview = document.getElementById('thumbnailPreview');
+            if (url) {
+                preview.innerHTML = `<img src="${url}" alt="Thumbnail" class="w-full h-full object-cover">`;
+            } else {
+                preview.innerHTML = '<span class="text-gray-400 text-sm">No thumbnail</span>';
+            }
+        }
+
+        // Remove thumbnail
+        function removeThumbnail() {
+            currentThumbnailUrl = null;
+            document.getElementById('thumbnailUrl').value = '';
+            document.getElementById('thumbnailInput').value = '';
+            updateThumbnailPreview(null);
         }
 
         // Update character count
         function updateCharCount() {
-            const description = document.getElementById('description');
+            const description = document.getElementById('eventDescription');
             const charCount = document.getElementById('charCount');
             charCount.textContent = description.value.length;
         }
 
         // Character counter
         document.addEventListener('DOMContentLoaded', () => {
-            const description = document.getElementById('description');
+            const description = document.getElementById('eventDescription');
             if (description) {
                 description.addEventListener('input', updateCharCount);
             }
@@ -323,12 +458,15 @@
         }
 
         // Handle form submission
-        document.getElementById('createForm').addEventListener('submit', async (e) => {
+        document.getElementById('eventForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
-            data.organizer_id = userId;
+            
+            if (!isEditMode) {
+                data.organizer_id = userId;
+            }
 
             // Validate dates
             const startsAt = new Date(data.starts_at);
@@ -346,12 +484,18 @@
             }
 
             const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('submitBtnText');
+            const originalText = btnText.textContent;
+            
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
+            btnText.textContent = isEditMode ? 'Updating...' : 'Submitting...';
 
             try {
-                const response = await fetch('api/event_requests.php', {
-                    method: 'POST',
+                const url = isEditMode ? `api/event_requests.php?id=${data.request_id}` : 'api/event_requests.php';
+                const method = isEditMode ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
@@ -359,18 +503,18 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showAlert('✓ Event request submitted successfully! Awaiting admin approval.', 'success');
-                    hideCreateForm();
+                    showAlert(isEditMode ? '✓ Event request updated successfully!' : '✓ Event request submitted successfully! Awaiting admin approval.', 'success');
+                    hideEventForm();
                     loadRequests();
                 } else {
-                    showAlert('✗ Failed to submit request: ' + (result.message || 'Unknown error'), 'error');
+                    showAlert('✗ Failed: ' + (result.message || 'Unknown error'), 'error');
                 }
             } catch (error) {
                 console.error('Error submitting request:', error);
                 showAlert('✗ Network error. Please try again.', 'error');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Request';
+                btnText.textContent = originalText;
             }
         });
 
@@ -442,75 +586,96 @@
             const endDate = new Date(req.ends_at);
             const createdDate = new Date(req.created_at);
             
+            const canEdit = req.status === 'pending';
+            
+            const defaultThumb = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%234F46E5" width="400" height="225"/%3E%3Ctext fill="white" font-size="24" font-family="Arial" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+            const thumbnailUrl = req.thumbnail ? req.thumbnail : defaultThumb;
+            
             return `
-                <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition bg-white">
-                    <!-- Header -->
-                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
-                        <div class="mb-3 sm:mb-0">
+                <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition bg-white">
+                    <!-- Thumbnail -->
+                    <div class="relative h-48 bg-gray-200">
+                        <img src="${thumbnailUrl}" alt="${escapeHtml(req.title)}" 
+                             class="w-full h-full object-cover"
+                             onerror="this.src='${defaultThumb}'">
+                        <div class="absolute top-2 right-2">
+                            <span class="px-4 py-2 rounded-lg text-sm font-semibold ${statusColor} border">
+                                ${statusIcon} ${req.status.toUpperCase()}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Header -->
+                        <div class="mb-4">
                             <h4 class="text-xl font-bold text-gray-900 mb-1">${escapeHtml(req.title)}</h4>
                             <p class="text-sm text-gray-500">
                                 Submitted on ${formatDate(createdDate)} at ${formatTime(createdDate)}
                             </p>
                         </div>
-                        <span class="px-4 py-2 rounded-lg text-sm font-semibold ${statusColor} border whitespace-nowrap">
-                            ${statusIcon} ${req.status.toUpperCase()}
-                        </span>
-                    </div>
-                    
-                    <!-- Description -->
-                    <div class="mb-4">
-                        <p class="text-gray-700 leading-relaxed">${escapeHtml(req.description)}</p>
-                    </div>
-                    
-                    <!-- Event Details -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Venue</p>
-                            <p class="text-gray-900 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                ${escapeHtml(req.venue)}
-                            </p>
+                        
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <p class="text-gray-700 leading-relaxed">${escapeHtml(req.description)}</p>
                         </div>
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Event Schedule</p>
-                            <p class="text-gray-900 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                ${formatDate(startDate)}
-                            </p>
-                            <p class="text-sm text-gray-600 ml-6">
-                                ${formatTime(startDate)} - ${formatTime(endDate)}
-                            </p>
+                        
+                        <!-- Event Details -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Venue</p>
+                                <p class="text-gray-900 flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    ${escapeHtml(req.venue)}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Event Schedule</p>
+                                <p class="text-gray-900 flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    ${formatDate(startDate)}
+                                </p>
+                                <p class="text-sm text-gray-600 ml-6">
+                                    ${formatTime(startDate)} - ${formatTime(endDate)}
+                                </p>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Status Message -->
-                    ${req.status === 'pending' ? `
-                        <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                            <p class="text-sm text-yellow-800">
-                                <strong>⏳ Awaiting Admin Approval</strong><br>
-                                Your event request is being reviewed by the administration.
-                            </p>
-                        </div>
-                    ` : req.status === 'approved' ? `
-                        <div class="mt-4 p-3 bg-green-50 border-l-4 border-green-400 rounded">
-                            <p class="text-sm text-green-800">
-                                <strong>✓ Approved</strong><br>
-                                Your event has been approved and is now published!
-                            </p>
-                        </div>
-                    ` : req.status === 'rejected' ? `
-                        <div class="mt-4 p-3 bg-red-50 border-l-4 border-red-400 rounded">
-                            <p class="text-sm text-red-800">
-                                <strong>✗ Rejected</strong><br>
-                                This event request was not approved. Please contact admin for more information.
-                            </p>
-                        </div>
-                    ` : ''}
+                        <!-- Status Message and Actions -->
+                        ${req.status === 'pending' ? `
+                            <div class="p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded mb-4">
+                                <p class="text-sm text-yellow-800">
+                                    <strong>⏳ Awaiting Admin Approval</strong><br>
+                                    Your event request is being reviewed. You can edit it while it's pending.
+                                </p>
+                            </div>
+                            <button onclick='showEditForm(${JSON.stringify(req)})' 
+                                    class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Edit Request
+                            </button>
+                        ` : req.status === 'approved' ? `
+                            <div class="p-3 bg-green-50 border-l-4 border-green-400 rounded">
+                                <p class="text-sm text-green-800">
+                                    <strong>✓ Approved & Published</strong><br>
+                                    Your event has been approved and is now visible to all users!
+                                </p>
+                            </div>
+                        ` : req.status === 'rejected' ? `
+                            <div class="p-3 bg-red-50 border-l-4 border-red-400 rounded">
+                                <p class="text-sm text-red-800">
+                                    <strong>✗ Rejected</strong><br>
+                                    This event request was not approved. Please contact admin for more information.
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
             `;
         }

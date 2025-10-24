@@ -24,27 +24,80 @@
     <!-- Hero Section -->
     <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">Upcoming Events</h2>
-            <p class="text-xl text-blue-100">Discover and join exciting events at University of Sri Jayewardenepura</p>
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">Discover Events</h2>
+            <p class="text-xl text-blue-100">Join exciting events at University of Sri Jayewardenepura</p>
         </div>
     </div>
 
-    <!-- Events Section -->
+    <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- Filter/Search Bar -->
-        <div class="mb-8 flex flex-col md:flex-row gap-4">
-            <input type="text" id="searchInput" placeholder="Search events..." 
+        <!-- Search Bar -->
+        <div class="mb-12 flex flex-col md:flex-row gap-4">
+            <input type="text" id="searchInput" placeholder="Search events by title, venue, or description..." 
                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             <button onclick="searchEvents()" 
-                    class="md:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+                    class="md:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 Search
             </button>
         </div>
 
-        <!-- Events Grid -->
-        <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <p class="col-span-full text-center text-gray-500">Loading events...</p>
-        </div>
+        <!-- Trending Events Section -->
+        <section class="mb-16">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">🔥 Trending Events</h2>
+                    <p class="text-gray-600 mt-1">Most popular events right now</p>
+                </div>
+            </div>
+            <div id="trendingEvents" class="relative">
+                <div class="flex justify-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recently Added Section -->
+        <section class="mb-16">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">✨ Recently Added</h2>
+                    <p class="text-gray-600 mt-1">Latest events added to the platform</p>
+                </div>
+            </div>
+            <div id="recentEvents" class="relative">
+                <div class="flex justify-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Events Section -->
+        <section>
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">📅 All Events</h2>
+                    <p class="text-gray-600 mt-1">Browse all upcoming events</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="filterEvents('upcoming')" id="upcomingBtn"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                        Upcoming
+                    </button>
+                    <button onclick="filterEvents('all')" id="allBtn"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition">
+                        All
+                    </button>
+                </div>
+            </div>
+            <div id="allEvents" class="relative">
+                <div class="flex justify-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+            </div>
+        </section>
 
         <!-- Empty State -->
         <div id="emptyState" class="hidden text-center py-12">
@@ -65,71 +118,193 @@
     </footer>
 
     <script>
-        let allEvents = [];
+        let currentFilter = 'upcoming';
+        let allEventsData = [];
 
-        async function loadEvents() {
+        // Load all event categories
+        async function loadAllCategories() {
+            await Promise.all([
+                loadTrendingEvents(),
+                loadRecentEvents(),
+                loadAllEventsSection()
+            ]);
+        }
+
+        // Load trending events
+        async function loadTrendingEvents() {
             try {
-                const response = await fetch('api/events.php?action=list');
+                const response = await fetch('api/events.php?action=trending&limit=10');
                 const result = await response.json();
                 
-                if (result.success && result.events) {
-                    allEvents = result.events;
-                    displayEvents(allEvents);
+                const container = document.getElementById('trendingEvents');
+                
+                if (result.success && result.events && result.events.length > 0) {
+                    container.innerHTML = `
+                        <div class="overflow-x-auto pb-4">
+                            <div class="flex gap-6" style="width: max-content;">
+                                ${result.events.map(event => createHorizontalCard(event, true)).join('')}
+                            </div>
+                        </div>
+                    `;
                 } else {
-                    showEmptyState();
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">No trending events at the moment</p>';
                 }
             } catch (error) {
-                console.error('Error loading events:', error);
-                showEmptyState();
+                console.error('Error loading trending events:', error);
+                document.getElementById('trendingEvents').innerHTML = '<p class="text-red-500 text-center py-8">Error loading events</p>';
             }
         }
 
-        function displayEvents(events) {
-            const eventsList = document.getElementById('eventsList');
-            const emptyState = document.getElementById('emptyState');
-            
-            if (events.length === 0) {
-                showEmptyState();
-                return;
+        // Load recently added events
+        async function loadRecentEvents() {
+            try {
+                const response = await fetch('api/events.php?action=recent&limit=10');
+                const result = await response.json();
+                
+                const container = document.getElementById('recentEvents');
+                
+                if (result.success && result.events && result.events.length > 0) {
+                    container.innerHTML = `
+                        <div class="overflow-x-auto pb-4">
+                            <div class="flex gap-6" style="width: max-content;">
+                                ${result.events.map(event => createHorizontalCard(event, false)).join('')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">No recent events</p>';
+                }
+            } catch (error) {
+                console.error('Error loading recent events:', error);
+                document.getElementById('recentEvents').innerHTML = '<p class="text-red-500 text-center py-8">Error loading events</p>';
             }
-            
-            emptyState.classList.add('hidden');
-            eventsList.innerHTML = events.map(event => createEventCard(event)).join('');
         }
 
-        function createEventCard(event) {
+        // Load all events section
+        async function loadAllEventsSection() {
+            try {
+                const url = currentFilter === 'upcoming' 
+                    ? 'api/events.php?action=all&upcoming=1' 
+                    : 'api/events.php?action=all';
+                    
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                const container = document.getElementById('allEvents');
+                
+                if (result.success && result.events && result.events.length > 0) {
+                    allEventsData = result.events;
+                    displayAllEvents(result.events);
+                } else {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">No events found</p>';
+                }
+            } catch (error) {
+                console.error('Error loading all events:', error);
+                document.getElementById('allEvents').innerHTML = '<p class="text-red-500 text-center py-8">Error loading events</p>';
+            }
+        }
+
+        // Display all events in grid
+        function displayAllEvents(events) {
+            const container = document.getElementById('allEvents');
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${events.map(event => createVerticalCard(event)).join('')}
+                </div>
+            `;
+        }
+
+        // Create horizontal scrolling card (for trending/recent)
+        function createHorizontalCard(event, showTrendingBadge) {
             const startDate = new Date(event.starts_at);
             const endDate = new Date(event.ends_at);
             const now = new Date();
             const isUpcoming = startDate > now;
             const isOngoing = startDate <= now && endDate >= now;
             
+            const defaultThumb = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%234F46E5" width="400" height="225"/%3E%3Ctext fill="white" font-size="24" font-family="Arial" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EEvent%3C/text%3E%3C/svg%3E';
+            const thumbnailUrl = event.thumbnail ? event.thumbnail : defaultThumb;
+            
             return `
-                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition overflow-hidden">
-                    <!-- Event Status Badge -->
-                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3 text-white">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-medium">
-                                ${isOngoing ? '🔴 LIVE NOW' : isUpcoming ? '📅 UPCOMING' : '✓ COMPLETED'}
+                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition overflow-hidden" style="width: 320px; flex-shrink: 0;">
+                    <!-- Thumbnail -->
+                    <div class="relative h-48 bg-gray-200 overflow-hidden">
+                        <img src="${thumbnailUrl}" alt="${escapeHtml(event.title)}" 
+                             class="w-full h-full object-cover"
+                             onerror="this.src='${defaultThumb}'">
+                        ${showTrendingBadge ? '<div class="absolute top-2 left-2 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center"><svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"></path></svg> TRENDING</div>' : ''}
+                        <div class="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 text-xs font-bold text-white">
+                            ❤️ ${event.like_count || 0}
+                        </div>
+                        <div class="absolute bottom-2 left-2">
+                            <span class="text-xs px-2 py-1 rounded ${isOngoing ? 'bg-red-600' : isUpcoming ? 'bg-green-600' : 'bg-gray-600'} text-white font-semibold">
+                                ${isOngoing ? '🔴 LIVE' : isUpcoming ? '📅 UPCOMING' : '✓ PAST'}
                             </span>
-                            <button onclick="toggleLike(${event.event_id}, this)" 
-                                    class="text-white hover:scale-110 transition">
-                                <span class="text-2xl">♡</span>
-                                <span class="text-sm ml-1">${event.like_count || 0}</span>
-                            </button>
                         </div>
                     </div>
                     
-                    <!-- Event Content -->
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">${event.title}</h3>
+                    <!-- Content -->
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">${escapeHtml(event.title)}</h3>
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-2">${escapeHtml(event.description)}</p>
                         
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">${event.description}</p>
+                        <div class="space-y-1 text-sm text-gray-700 mb-4">
+                            <div class="flex items-center">
+                                <span class="mr-2">📍</span>
+                                <span class="truncate">${escapeHtml(event.venue)}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="mr-2">📅</span>
+                                <span class="text-xs">${formatDate(startDate)}</span>
+                            </div>
+                        </div>
+                        
+                        <button onclick="viewDetails(${event.event_id})" 
+                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create vertical card (for all events grid)
+        function createVerticalCard(event) {
+            const startDate = new Date(event.starts_at);
+            const endDate = new Date(event.ends_at);
+            const now = new Date();
+            const isUpcoming = startDate > now;
+            const isOngoing = startDate <= now && endDate >= now;
+            
+            const defaultThumb = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%234F46E5" width="400" height="225"/%3E%3Ctext fill="white" font-size="24" font-family="Arial" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EEvent%3C/text%3E%3C/svg%3E';
+            const thumbnailUrl = event.thumbnail ? event.thumbnail : defaultThumb;
+            
+            return `
+                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition overflow-hidden">
+                    <!-- Thumbnail -->
+                    <div class="relative h-48 bg-gray-200 overflow-hidden">
+                        <img src="${thumbnailUrl}" alt="${escapeHtml(event.title)}" 
+                             class="w-full h-full object-cover"
+                             onerror="this.src='${defaultThumb}'">
+                        <div class="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 text-xs font-bold text-white">
+                            ❤️ ${event.like_count || 0}
+                        </div>
+                        <div class="absolute bottom-2 left-2">
+                            <span class="text-xs px-2 py-1 rounded ${isOngoing ? 'bg-red-600' : isUpcoming ? 'bg-green-600' : 'bg-gray-600'} text-white font-semibold">
+                                ${isOngoing ? '🔴 LIVE' : isUpcoming ? '📅 UPCOMING' : '✓ PAST'}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">${escapeHtml(event.title)}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">${escapeHtml(event.description)}</p>
                         
                         <div class="space-y-2 text-sm text-gray-700 mb-4">
                             <div class="flex items-start">
                                 <span class="mr-2">📍</span>
-                                <span class="font-medium">${event.venue}</span>
+                                <span class="font-medium">${escapeHtml(event.venue)}</span>
                             </div>
                             <div class="flex items-start">
                                 <span class="mr-2">📅</span>
@@ -140,7 +315,7 @@
                             </div>
                             <div class="flex items-start">
                                 <span class="mr-2">👤</span>
-                                <span>${event.organizer_name || 'Event Organizer'}</span>
+                                <span>${escapeHtml(event.organizer_name || 'Event Organizer')}</span>
                             </div>
                         </div>
                         
@@ -153,6 +328,182 @@
             `;
         }
 
+        // Filter events
+        function filterEvents(filter) {
+            currentFilter = filter;
+            
+            // Update button styles
+            const upcomingBtn = document.getElementById('upcomingBtn');
+            const allBtn = document.getElementById('allBtn');
+            
+            if (filter === 'upcoming') {
+                upcomingBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition';
+                allBtn.className = 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition';
+            } else {
+                allBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition';
+                upcomingBtn.className = 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition';
+            }
+            
+            loadAllEventsSection();
+        }
+
+        // Search events
+        async function searchEvents() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (!searchTerm) {
+                loadAllEventsSection();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`api/events.php?action=all&search=${encodeURIComponent(searchTerm)}`);
+                const result = await response.json();
+                
+                if (result.success && result.events && result.events.length > 0) {
+                    displayAllEvents(result.events);
+                } else {
+                    document.getElementById('allEvents').innerHTML = '<p class="text-gray-500 text-center py-8">No events found matching your search</p>';
+                }
+            } catch (error) {
+                console.error('Error searching events:', error);
+            }
+        }
+
+        // View event details
+        async function viewDetails(eventId) {
+            // Increment view count
+            try {
+                await fetch('api/events.php?action=view', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event_id: eventId })
+                });
+            } catch (error) {
+                console.error('Error tracking view:', error);
+            }
+            
+            // Find event in loaded data
+            let event = allEventsData.find(e => e.event_id === eventId);
+            
+            if (!event) {
+                // Try to find in other sections
+                alert('Event details not available');
+                return;
+            }
+            
+            const defaultThumb = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="450"%3E%3Crect fill="%234F46E5" width="800" height="450"/%3E%3Ctext fill="white" font-size="48" font-family="Arial" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EEvent%3C/text%3E%3C/svg%3E';
+            const thumbnailUrl = event.thumbnail ? event.thumbnail : defaultThumb;
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <!-- Thumbnail -->
+                    <div class="relative h-72 bg-gray-200">
+                        <img src="${thumbnailUrl}" alt="${escapeHtml(event.title)}" 
+                             class="w-full h-full object-cover"
+                             onerror="this.src='${defaultThumb}'">
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="p-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">${escapeHtml(event.title)}</h2>
+                        
+                        <div class="mb-6">
+                            <h3 class="font-semibold text-gray-700 mb-2">Description</h3>
+                            <p class="text-gray-600 leading-relaxed">${escapeHtml(event.description)}</p>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-6 space-y-4 mb-6">
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">📍</span>
+                                <div>
+                                    <p class="font-semibold text-gray-700">Venue</p>
+                                    <p class="text-gray-900">${escapeHtml(event.venue)}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">📅</span>
+                                <div>
+                                    <p class="font-semibold text-gray-700">Date & Time</p>
+                                    <p class="text-gray-900">${formatDate(new Date(event.starts_at))}</p>
+                                    <p class="text-gray-600">${formatTime(new Date(event.starts_at))} - ${formatTime(new Date(event.ends_at))}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">👤</span>
+                                <div>
+                                    <p class="font-semibold text-gray-700">Organizer</p>
+                                    <p class="text-gray-900">${escapeHtml(event.organizer_name || 'Event Organizer')}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">❤️</span>
+                                <div>
+                                    <p class="font-semibold text-gray-700">Engagement</p>
+                                    <p class="text-gray-900">${event.like_count || 0} likes · ${event.view_count || 0} views</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button onclick="toggleLikeInModal(${event.event_id}, this)" 
+                                    class="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span id="likeText">Like Event</span>
+                            </button>
+                            <button onclick="this.closest('.fixed').remove()" 
+                                    class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Toggle like in modal
+        async function toggleLikeInModal(eventId, button) {
+            try {
+                const response = await fetch('api/events.php?action=like', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event_id: eventId })
+                });
+                
+                if (response.ok) {
+                    button.querySelector('#likeText').textContent = 'Liked! ❤️';
+                    button.disabled = true;
+                    button.classList.add('opacity-75', 'cursor-not-allowed');
+                    
+                    // Reload all categories to show updated like counts
+                    setTimeout(() => {
+                        loadAllCategories();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error liking event:', error);
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function formatDate(date) {
             const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
             return date.toLocaleDateString('en-US', options);
@@ -162,101 +513,6 @@
             return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
 
-        async function toggleLike(eventId, button) {
-            try {
-                const heartIcon = button.querySelector('span:first-child');
-                const isLiked = heartIcon.textContent === '♥';
-                
-                const action = isLiked ? 'unlike' : 'like';
-                const response = await fetch(`api/events.php?action=${action}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ event_id: eventId })
-                });
-                
-                if (response.ok) {
-                    heartIcon.textContent = isLiked ? '♡' : '♥';
-                    const countSpan = button.querySelector('span:last-child');
-                    let count = parseInt(countSpan.textContent);
-                    countSpan.textContent = isLiked ? count - 1 : count + 1;
-                }
-            } catch (error) {
-                console.error('Error toggling like:', error);
-            }
-        }
-
-        function viewDetails(eventId) {
-            const event = allEvents.find(e => e.event_id === eventId);
-            if (!event) return;
-            
-            // Create modal
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
-            modal.innerHTML = `
-                <div class="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="flex justify-between items-start mb-6">
-                        <h2 class="text-3xl font-bold text-gray-900">${event.title}</h2>
-                        <button onclick="this.closest('.fixed').remove()" 
-                                class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <h3 class="font-semibold text-gray-700 mb-2">Description</h3>
-                            <p class="text-gray-600">${event.description}</p>
-                        </div>
-                        
-                        <div>
-                            <h3 class="font-semibold text-gray-700 mb-2">Event Details</h3>
-                            <div class="bg-gray-50 rounded-lg p-4 space-y-2">
-                                <p><span class="font-medium">📍 Venue:</span> ${event.venue}</p>
-                                <p><span class="font-medium">📅 Date:</span> ${formatDate(new Date(event.starts_at))}</p>
-                                <p><span class="font-medium">🕐 Time:</span> ${formatTime(new Date(event.starts_at))} - ${formatTime(new Date(event.ends_at))}</p>
-                                <p><span class="font-medium">👤 Organizer:</span> ${event.organizer_name || 'Event Organizer'}</p>
-                                <p><span class="font-medium">❤️ Likes:</span> ${event.like_count || 0}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 flex gap-3">
-                        <button onclick="toggleLike(${event.event_id}, this); loadEvents();" 
-                                class="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition">
-                            ♥ Like Event
-                        </button>
-                        <button onclick="this.closest('.fixed').remove()" 
-                                class="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-medium hover:bg-gray-300 transition">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-
-        function searchEvents() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            
-            if (!searchTerm) {
-                displayEvents(allEvents);
-                return;
-            }
-            
-            const filtered = allEvents.filter(event => 
-                event.title.toLowerCase().includes(searchTerm) ||
-                event.description.toLowerCase().includes(searchTerm) ||
-                event.venue.toLowerCase().includes(searchTerm) ||
-                (event.organizer_name && event.organizer_name.toLowerCase().includes(searchTerm))
-            );
-            
-            displayEvents(filtered);
-        }
-
-        function showEmptyState() {
-            document.getElementById('eventsList').innerHTML = '';
-            document.getElementById('emptyState').classList.remove('hidden');
-        }
-
         // Search on Enter key
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -264,8 +520,8 @@
             }
         });
 
-        // Load events on page load
-        loadEvents();
+        // Load all categories on page load
+        loadAllCategories();
     </script>
 </body>
 </html>

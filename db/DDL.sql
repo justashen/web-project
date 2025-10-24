@@ -35,6 +35,7 @@ CREATE TABLE event_request (
     title VARCHAR(255) NOT NULL,
     venue VARCHAR(255) NOT NULL,
     description VARCHAR(1000) NOT NULL,
+    thumbnail VARCHAR(500),
     status ENUM('pending', 'approved', 'rejected', 'deleted') NOT NULL DEFAULT 'pending',
     FOREIGN KEY (organizer_id) REFERENCES organizer(organizer_id),
     starts_at DATETIME NOT NULL,
@@ -56,8 +57,10 @@ CREATE TABLE events (
     title VARCHAR(255) NOT NULL,
     venue VARCHAR(255) NOT NULL,
     description VARCHAR(1000) NOT NULL,
+    thumbnail VARCHAR(500),
     status ENUM('draft', 'published', 'deleted', 'canceled') NOT NULL DEFAULT 'draft',
     like_count INT NOT NULL DEFAULT 0,
+    view_count INT NOT NULL DEFAULT 0,
     UNIQUE KEY events_request_id (request_id),
     FOREIGN KEY (request_id) REFERENCES event_request(request_id),
     starts_at DATETIME NOT NULL,
@@ -69,7 +72,9 @@ CREATE TABLE events (
     INDEX idx_status (status),
     INDEX idx_starts_at (starts_at),
     INDEX idx_ends_at (ends_at),
-    INDEX idx_title (title)
+    INDEX idx_title (title),
+    INDEX idx_trending (like_count, view_count , created_at),
+    INDEX idx_recent (created_at, DESC)
 );
 
 

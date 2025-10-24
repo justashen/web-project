@@ -8,6 +8,7 @@ class EventRequest {
     public $title;
     public $venue;
     public $description;
+    public $thumbnail;
     public $status;
     public $starts_at;
     public $ends_at;
@@ -25,6 +26,7 @@ class EventRequest {
                     title = :title,
                     venue = :venue,
                     description = :description,
+                    thumbnail = :thumbnail,
                     starts_at = :starts_at,
                     ends_at = :ends_at";
 
@@ -34,12 +36,14 @@ class EventRequest {
         $this->title = htmlspecialchars(strip_tags($this->title));
         $this->venue = htmlspecialchars(strip_tags($this->venue));
         $this->description = htmlspecialchars(strip_tags($this->description));
+        $this->thumbnail = htmlspecialchars(strip_tags($this->thumbnail));
 
         // Bind parameters
         $stmt->bindParam(':organizer_id', $this->organizer_id);
         $stmt->bindParam(':title', $this->title);
         $stmt->bindParam(':venue', $this->venue);
         $stmt->bindParam(':description', $this->description);
+        $stmt->bindParam(':thumbnail', $this->thumbnail);
         $stmt->bindParam(':starts_at', $this->starts_at);
         $stmt->bindParam(':ends_at', $this->ends_at);
 
@@ -114,6 +118,7 @@ class EventRequest {
             $this->title = $row['title'];
             $this->venue = $row['venue'];
             $this->description = $row['description'];
+            $this->thumbnail = $row['thumbnail'];
             $this->status = $row['status'];
             $this->starts_at = $row['starts_at'];
             $this->ends_at = $row['ends_at'];
@@ -124,12 +129,13 @@ class EventRequest {
         return false;
     }
 
-    // Update event request
+    // Update event request (for organizer - only when pending)
     public function update() {
         $query = "UPDATE " . $this->table . "
                 SET title = :title,
                     venue = :venue,
                     description = :description,
+                    thumbnail = :thumbnail,
                     starts_at = :starts_at,
                     ends_at = :ends_at
                 WHERE request_id = :request_id";
@@ -140,12 +146,47 @@ class EventRequest {
         $this->title = htmlspecialchars(strip_tags($this->title));
         $this->venue = htmlspecialchars(strip_tags($this->venue));
         $this->description = htmlspecialchars(strip_tags($this->description));
+        $this->thumbnail = htmlspecialchars(strip_tags($this->thumbnail));
 
         // Bind parameters
         $stmt->bindParam(':request_id', $this->request_id);
         $stmt->bindParam(':title', $this->title);
         $stmt->bindParam(':venue', $this->venue);
         $stmt->bindParam(':description', $this->description);
+        $stmt->bindParam(':thumbnail', $this->thumbnail);
+        $stmt->bindParam(':starts_at', $this->starts_at);
+        $stmt->bindParam(':ends_at', $this->ends_at);
+
+        return $stmt->execute();
+    }
+
+    // Admin update - can update everything including status
+    public function adminUpdate() {
+        $query = "UPDATE " . $this->table . "
+                SET title = :title,
+                    venue = :venue,
+                    description = :description,
+                    thumbnail = :thumbnail,
+                    status = :status,
+                    starts_at = :starts_at,
+                    ends_at = :ends_at
+                WHERE request_id = :request_id";
+
+        $stmt = $this->conn->prepare($query);
+
+        // Sanitize
+        $this->title = htmlspecialchars(strip_tags($this->title));
+        $this->venue = htmlspecialchars(strip_tags($this->venue));
+        $this->description = htmlspecialchars(strip_tags($this->description));
+        $this->thumbnail = htmlspecialchars(strip_tags($this->thumbnail));
+
+        // Bind parameters
+        $stmt->bindParam(':request_id', $this->request_id);
+        $stmt->bindParam(':title', $this->title);
+        $stmt->bindParam(':venue', $this->venue);
+        $stmt->bindParam(':description', $this->description);
+        $stmt->bindParam(':thumbnail', $this->thumbnail);
+        $stmt->bindParam(':status', $this->status);
         $stmt->bindParam(':starts_at', $this->starts_at);
         $stmt->bindParam(':ends_at', $this->ends_at);
 
@@ -166,6 +207,20 @@ class EventRequest {
         return $stmt->execute();
     }
 
+    // Update thumbnail only
+    public function updateThumbnail() {
+        $query = "UPDATE " . $this->table . "
+                SET thumbnail = :thumbnail
+                WHERE request_id = :request_id";
+
+        $stmt = $this->conn->prepare($query);
+        $this->thumbnail = htmlspecialchars(strip_tags($this->thumbnail));
+        $stmt->bindParam(':request_id', $this->request_id);
+        $stmt->bindParam(':thumbnail', $this->thumbnail);
+
+        return $stmt->execute();
+    }
+
     // Delete event request (soft delete)
     public function delete() {
         $query = "UPDATE " . $this->table . "
@@ -176,6 +231,14 @@ class EventRequest {
         $stmt->bindParam(':request_id', $this->request_id);
 
         return $stmt->execute();
+    }
+
+    // Check if organizer can edit (only pending requests)
+    public function canEdit($organizer_id) {
+        $request = $this->readOne();
+        if (!$request) return false;
+        
+        return ($request['organizer_id'] == $organizer_id && $request['status'] === 'pending');
     }
 
     // Validation
