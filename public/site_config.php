@@ -1,1 +1,0 @@
-<?php $base='https://japuraevents.lk/'; ?>
