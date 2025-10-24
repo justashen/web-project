@@ -25,6 +25,7 @@ class EventRequestController {
         $this->eventRequest->description = $data['description'];
         $this->eventRequest->starts_at = $data['starts_at'];
         $this->eventRequest->ends_at = $data['ends_at'];
+        $this->eventRequest->thumbnail = $data['thumbnail'] ?? null;
 
         // Validate
         $validation = $this->eventRequest->validate();
